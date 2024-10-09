@@ -52,14 +52,26 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ),
-        CustomTriangle(
-          triangleDirection: TriangleDirection.top,
-          borderRadius: _currentSliderRadius,
-          child: Container(
-            color: Colors.teal,
-            width: _currentSliderWidth,
-            height: _currentSliderHeight,
-          ),
+        Stack(
+          children: [
+            CustomTriangle(
+              triangleDirection: TriangleDirection.top,
+              child: Container(
+                color: Colors.pink,
+                height: _currentSliderHeight,
+                width: _currentSliderWidth,
+              ),
+            ),
+            CustomTriangle(
+              triangleDirection: TriangleDirection.top,
+              borderRadius: _currentSliderRadius,
+              child: Container(
+                color: Colors.amber,
+                width: _currentSliderWidth,
+                height: _currentSliderHeight,
+              ),
+            ),
+          ],
         ),
         Slider(
             value: _currentSliderWidth,

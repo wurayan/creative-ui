@@ -268,12 +268,13 @@ Path _triangleStart(
   double arctan = atan(height / (base / 2));
   double anguloBase = arctan * (180 / pi);
   double anguloContato = 90 - anguloBase;
+  double contatoRad = anguloContato * (pi / 180);
 
   //Cateto oposto do Triangulo Retangulo construido dentro do circulo usado para ponta
   //  inicial do Triangulo, este valor somado com o Raio define a distancia do final
   //  do circulo para a base do Triangulo;
-  double catetoOpostoMenor = sin(arctan) * hipotenusa;
-  double catetoAdjacenteMenor = cos(arctan) * hipotenusa;
+  double catetoOpostoMenor = sin(contatoRad) * hipotenusa;
+  double catetoAdjacenteMenor = cos(contatoRad) * hipotenusa;
 
   //Define a distancia do ponto de contato com a base do Triangulo, também usada para
   //  o cálculo da distancia do ponto até a borda;
@@ -330,9 +331,10 @@ _triangleEnd(
   double arctan = atan(height / (base / 2));
   double anguloBase = arctan * (180 / pi);
   double anguloContato = 90 - anguloBase;
+  double contatoRad = anguloContato * (pi / 180);
 
-  double catetoOpostoMenor = sin(arctan) * hipotenusa;
-  double catetoAdjacenteMenor = cos(arctan) * hipotenusa;
+  double catetoOpostoMenor = sin(contatoRad) * hipotenusa;
+  double catetoAdjacenteMenor = cos(contatoRad) * hipotenusa;
 
   //Define a distancia do ponto de contato com a base do Triangulo, também usada para
   //  o cálculo da distancia do ponto até a borda;
