@@ -11,6 +11,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   double _currentSliderWidth = 400;
   double _currentSliderHeight = 400;
+  double _currentSliderRadius = 40;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -39,9 +40,21 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              "Radius: $_currentSliderRadius",
+              style: const TextStyle(
+                fontSize: 20,
+              ),
+            ),
+          ),
+        ),
         CustomTriangle(
           triangleDirection: TriangleDirection.top,
-          borderRadius: 40,
+          borderRadius: _currentSliderRadius,
           child: Container(
             color: Colors.teal,
             width: _currentSliderWidth,
@@ -60,6 +73,12 @@ class _HomeScreenState extends State<HomeScreen> {
             min: 50,
             divisions: 350,
             onChanged: (value) => setState(() => _currentSliderHeight = value)),
+        Slider(
+            value: _currentSliderRadius,
+            max: 200,
+            min: 10,
+            divisions: 190,
+            onChanged: (value) => setState(() => _currentSliderRadius = value)),
       ],
     ));
   }

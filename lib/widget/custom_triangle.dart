@@ -2,7 +2,8 @@ import 'dart:math';
 import 'package:creative_app/widget/custom_shape_shadow.dart';
 import 'package:flutter/material.dart';
 
-///Defines the direction the triangle is "pointing", which means, the oposite of the base of the Triangle;
+///Defines the direction the triangle is "pointing", which means, the oposite of
+///the base of the Triangle;
 enum TriangleDirection {
   top,
   right,
@@ -44,8 +45,13 @@ class CustomTriangle extends StatelessWidget {
   }
 }
 
+///Draws the triangle using the triangle direction, if [borderRadius] is `null` or `0.0`
+///the triangle is drawn without rounded corners;
 class _CustomTriangleClipper extends CustomClipper<Path> {
+  ///The direction the triangle is pointing;
   final TriangleDirection triangleDirection;
+
+  ///The Radius used to build the rounded corners;
   final double? borderRadius;
 
   _CustomTriangleClipper({
@@ -108,44 +114,8 @@ class _CustomTriangleClipper extends CustomClipper<Path> {
       radius = min(maxRadius1, maxRadius2);
     }
 
-    ///If the radius informed are bigger or equal than the maxRadius, the triangle turns into a circle;
-    ///TODO Corrigir o círculo que está tomando o container inteiro invés de manter as dimensões internas do
-    /// triangulo;
-    /// Talvez nem precisamos desse cálculo;
-    //Comentei o trecho abaixo pois vamos testar outra forma de controlar os limites do raio;
-    // if (r >= maxRadius) {
-    //   path.moveTo(w / 2, h);
-    //   path.arcToPoint(
-    //     Offset(w / 2, 0),
-    //     radius: Radius.circular(r),
-    //   );
-    //   path.arcToPoint(
-    //     Offset(w / 2, h),
-    //     radius: Radius.circular(r),
-    //   );
-    //   return path;
-    // }
-
     switch (triangleDirection) {
       case TriangleDirection.right:
-        // //θ = arctan(2h/b), este calculo pega o angulo adjacente á base do triangulo isósceles;
-        // //θ equivale a (α) um dos angulos do triangulo retangulo que delimita a distancia das linhas
-        // //  para a borda
-        // double arctan = atan(2 * w / h);
-
-        // //O cateto maior do Triangulo retangulo e oposto ao arctan (ponta do triangulo maior);
-        // double catetoMaior = r + squareSide / 2;
-
-        // //O calculo da hipotenusa é sin(α) = CO/h logo h = CO/sin(α);
-        // double hipotenusa = catetoMaior / sin(arctan);
-
-        // //borderDistance equivale ao catetoMenor, no caso do triângulo apontando para direita o borderDistance
-        // //  equivale a Y;
-        // borderDistance = sqrt(pow(hipotenusa, 2) - pow(catetoMaior, 2));
-
-        // //Altura do triangulo menor medido para a ponta do Triangulo maior, utilizando as mesmas proporções do
-        // //  triangulo maior porém com squareSide como base, no caso da ponta para a direita alphaH é X;
-        // double alphaH = (squareSide * h) / w;
         path = _triangleStart(size, radius, path, triangleDirection);
         path = _triangleTip(size, radius, path, triangleDirection);
         path = _triangleEnd(size, radius, path, triangleDirection);
@@ -186,51 +156,88 @@ Path _triangleTip(
   double height =
       triangleDirection.orientation == "vertical" ? size.height : size.width;
 
-  ///We use the formula [θ = arctan(2h/b)] to calculate the angle adjacent to the base of the Triangle
-  /// in Rad, this angle equals the the angle in which the curvature of the tipo starts and ends
+  ///We use the formula `θ = arctan(2h/b)` to calculate the angle adjacent to the base of the Triangle
+  /// in Rad, this angle equals the the angle in which the curvature of the tip starts and ends
   double baseRad = atan(height / (base / 2));
 
   ///We convert the baseRad to angle;
   double baseAngle = baseRad * (180 / pi);
+
+  ///Half the angle of the tip of the triangle, this represents one of the angles inside the biggest
+  ///square traingle used to calculate de borderDistance;
+  double topRad = atan(base / 2 / height);
+
+  ///Converting the [topRad] to angles;
+  double topAngle = topRad * 180 / pi;
 
   ///Is the point where the curvature of the tip ends and the straight line starts, this point
   /// will always be inside a quarter of a Circle (under 90º) and is inversely proportional to
   /// the baseAngle, which means if the baseAngle is 30º, then contact angle is 60º;
   double contactAngle = 90 - baseAngle;
 
+//Radiano do angulo de contato, usamos para o canculo do triangulo medio dentro do criculo da ponta;
+  double contactRad = contactAngle * (pi / 180);
+
+//Nesse caso estamos construindo um triangulo retangulo dentro do circulo usado para o desenho da curva,
+//tendo o angulo de contato como
+  double catetoAdjacenteMedio = cos(contactRad) * radius;
+
+  //é o mesmo que cateto oposto menor;
+  double catetoOpostoMedio = sin(contactRad) * radius;
+
+  //cateto adjacente do menor triangulo retangulo, representa a distancia entre triangulo retangulo medio e
+  //borda do triangulo isosceles;
+  double catetoAdjacenteMenor = catetoOpostoMedio / tan(baseRad);
+
+  // a soma dos catetos representa o cateto Adjacente do maior triangulo, o qual o cateto oposto representa
+  // a borderDistance entre a ponta to triangulo e o centro da esfera usada para desenhar a curvatora do ponta;
+  double catetoAdjacenteMaior = catetoAdjacenteMenor + catetoAdjacenteMedio;
+
+  //Cateto oposto maior calculado a partir do valor acima;
+  //Estamos substituindo todos os AlphaH com borderDistance;
+  double borderDistance = catetoAdjacenteMaior * tan(baseRad);
+  if (borderDistance < radius) borderDistance = radius;
+
   ///We use cross-multiplication to determine the distance between the center of the reference
-  /// circle for the tip and the border, alphaH equals the height of a smaller triangle with the same 
+  /// circle for the tip and the border, alphaH equals the height of a smaller triangle with the same
   /// proportions of the Triangle being drawn using 2radius as base;
+  /// TODO we won't use the alphaH anymore, because it will reduce the triangle height if
+  /// the base used in calculation is too small and we want to make the triangle as big as possible;
   double alphaH = (radius * 2 * height) / base;
 
   ///A check if alphaH is smaller than radius, because alphaH determines the distance from
-  /// the center of the circle to border of the container, so if alphaH is too small, the
-  /// curvature isn't correctly drawn;
+  /// the center of the circle to the border of the container, so if alphaH is too small, the
+  /// curvature is drawn outside of the dimensions given, being cut by the border;
+  ///
   ///Since we limit radius to never be bigger than half the height of the triangle, we can
-  /// assure the alphaH will be at equal distance from the borders of the container;
+  /// assure the alphaH will be always at equal distance from the borders of the container;
   if (alphaH < radius) alphaH = radius;
 
   //Definimos o angulo inicial através do rad de anguloContato pois vamos somar o valor inicial
   //  do circulo ao anguloContato para saber o ponto exato que a curvatura se inicia;
-  ///The angle 
+  ///The angle
   double initialAngle = contactAngle * (pi / 180);
   Offset offset;
   switch (triangleDirection) {
     case TriangleDirection.top:
-      offset = Offset(size.width / 2, alphaH);
+      // offset = Offset(size.width / 2, alphaH);
+      offset = Offset(size.width / 2, borderDistance);
       //converte o angulo do contato para radiano;
       initialAngle += pi;
       break;
     case TriangleDirection.right:
-      offset = Offset(size.width - alphaH, size.height / 2);
+      // offset = Offset(size.width - alphaH, size.height / 2);
+      offset = Offset(size.width - borderDistance, size.height / 2);
       initialAngle += 3 * pi / 2;
       break;
     case TriangleDirection.bottom:
-      offset = Offset(size.width / 2, size.height - alphaH);
+      // offset = Offset(size.width / 2, size.height - alphaH);
+      offset = Offset(size.width / 2, size.height - borderDistance);
       initialAngle += 0;
       break;
     default:
-      offset = Offset(alphaH, size.height / 2);
+      // offset = Offset(alphaH, size.height / 2);
+      offset = Offset(borderDistance, size.height / 2);
       initialAngle += pi / 2;
       break;
   }
@@ -272,28 +279,29 @@ Path _triangleStart(
   //  o cálculo da distancia do ponto até a borda;
   double catetoOpostoMaior = catetoOpostoMenor + radius;
 
-  double borderDistance = catetoOpostoMaior / tan(arctan);
+  double catetoAdjacenteMaior = catetoOpostoMaior / tan(arctan);
+
+  double borderDistance = catetoAdjacenteMaior + catetoAdjacenteMenor;
+  if (borderDistance < radius) borderDistance = radius;
 
   Offset offset;
   double initialAngle;
 
   switch (triangleDirection) {
     case TriangleDirection.top:
-      offset =
-          Offset(borderDistance + catetoAdjacenteMenor, size.height - radius);
+      offset = Offset(borderDistance, size.height - radius);
       initialAngle = pi / 2;
       break;
     case TriangleDirection.right:
-      offset = Offset(radius, borderDistance + radius);
+      offset = Offset(radius, borderDistance);
       initialAngle = pi;
       break;
     case TriangleDirection.bottom:
-      offset = Offset(size.width - borderDistance - radius, radius);
+      offset = Offset(size.width - borderDistance, radius);
       initialAngle = pi * 1.5;
       break;
     default:
-      offset =
-          Offset(size.width - radius, size.width - borderDistance - radius);
+      offset = Offset(size.width - radius, size.height - borderDistance);
       initialAngle = 0;
       break;
   }
@@ -330,28 +338,28 @@ _triangleEnd(
   //  o cálculo da distancia do ponto até a borda;
   double catetoOpostoMaior = catetoOpostoMenor + radius;
 
-  double borderDistance = catetoOpostoMaior / tan(arctan);
+  double catetoAdjacenteMaior = catetoOpostoMaior / tan(arctan);
+  double borderDistance = catetoAdjacenteMaior + catetoAdjacenteMenor;
+  if (borderDistance < radius) borderDistance = radius;
 
   Offset offset;
   double initialAngle = arctan;
 
   switch (triangleDirection) {
     case TriangleDirection.top:
-      offset = Offset(size.width - borderDistance - catetoAdjacenteMenor,
-          size.height - radius);
+      offset = Offset(size.width - borderDistance, size.height - radius);
       initialAngle += pi * 1.5;
       break;
     case TriangleDirection.right:
-      offset = Offset(radius, size.height - borderDistance - radius);
+      offset = Offset(radius, size.height - borderDistance);
       initialAngle += 0;
       break;
     case TriangleDirection.bottom:
-      offset = Offset(borderDistance + catetoAdjacenteMenor, radius);
+      offset = Offset(borderDistance, radius);
       initialAngle += pi / 2;
       break;
     default:
-      offset =
-          Offset(size.width - radius, borderDistance + catetoAdjacenteMenor);
+      offset = Offset(size.width - radius, borderDistance);
       initialAngle += pi;
       break;
   }
