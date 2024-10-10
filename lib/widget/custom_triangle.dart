@@ -17,9 +17,11 @@ enum TriangleDirection {
           : "horizontal";
 }
 
-///Creates a Triangle that takes all the space provided by [child];
-///If child is a Container, the Triangle Base takes all the extent of the Container Side;
-///If child is of another Widget the Triangle will clip its child;
+///Creates a Triangle that takes all the space provided by [child].
+///
+///If child is a Container, the Triangle Base takes all the extent of the Container Side.
+///
+///If child is of another Widget the Triangle will clip its child.
 class CustomTriangle extends StatelessWidget {
   final TriangleDirection triangleDirection;
   final List<BoxShadow> boxShadows;
@@ -165,10 +167,10 @@ Path _triangleTip(
 
   ///Half the angle of the tip of the triangle, this represents one of the angles inside the biggest
   ///square traingle used to calculate de borderDistance;
-  double topRad = atan(base / 2 / height);
+  // double topRad = atan(base / 2 / height);
 
   ///Converting the [topRad] to angles;
-  double topAngle = topRad * 180 / pi;
+  // double topAngle = topRad * 180 / pi;
 
   ///Is the point where the curvature of the tip ends and the straight line starts, this point
   /// will always be inside a quarter of a Circle (under 90º) and is inversely proportional to
@@ -197,21 +199,6 @@ Path _triangleTip(
   //Estamos substituindo todos os AlphaH com borderDistance;
   double borderDistance = catetoAdjacenteMaior * tan(baseRad);
   if (borderDistance < radius) borderDistance = radius;
-
-  ///We use cross-multiplication to determine the distance between the center of the reference
-  /// circle for the tip and the border, alphaH equals the height of a smaller triangle with the same
-  /// proportions of the Triangle being drawn using 2radius as base;
-  /// TODO we won't use the alphaH anymore, because it will reduce the triangle height if
-  /// the base used in calculation is too small and we want to make the triangle as big as possible;
-  double alphaH = (radius * 2 * height) / base;
-
-  ///A check if alphaH is smaller than radius, because alphaH determines the distance from
-  /// the center of the circle to the border of the container, so if alphaH is too small, the
-  /// curvature is drawn outside of the dimensions given, being cut by the border;
-  ///
-  ///Since we limit radius to never be bigger than half the height of the triangle, we can
-  /// assure the alphaH will be always at equal distance from the borders of the container;
-  if (alphaH < radius) alphaH = radius;
 
   //Definimos o angulo inicial através do rad de anguloContato pois vamos somar o valor inicial
   //  do circulo ao anguloContato para saber o ponto exato que a curvatura se inicia;
